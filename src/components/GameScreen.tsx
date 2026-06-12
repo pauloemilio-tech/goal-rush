@@ -3,12 +3,12 @@ import { GameCanvas } from './GameCanvas'
 
 interface GameScreenProps {
   gameState: GameState
-  onChangeTeam: () => void
+  onBackToHome: () => void
 }
 
 export function GameScreen({
   gameState,
-  onChangeTeam,
+  onBackToHome,
 }: GameScreenProps) {
   return (
     <main className="screen game-screen">
@@ -24,10 +24,10 @@ export function GameScreen({
 
           <button
             className="secondary-button"
-            onClick={onChangeTeam}
+            onClick={onBackToHome}
             type="button"
           >
-            Trocar seleção
+            Voltar ao menu inicial
           </button>
         </header>
 

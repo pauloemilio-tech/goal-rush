@@ -6,3 +6,9 @@ export interface GameState {
   status: GameStatus
   selectedTeam: Team
 }
+
+export interface GameSceneState extends GameState {
+  elapsedTime: number
+  groundOffset: number
+  speed: number
+}

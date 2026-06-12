@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { GAME_HEIGHT, GAME_WIDTH } from '../game/constants'
-import { renderGameScene } from '../game/renderer'
+import { startGameEngine } from '../game/engine'
 import type { GameState } from '../types/game'
 
 interface GameCanvasProps {
@@ -22,7 +22,7 @@ export function GameCanvas({ gameState }: GameCanvasProps) {
     canvas.height = GAME_HEIGHT * pixelRatio
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
 
-    renderGameScene(context, gameState)
+    return startGameEngine(context, gameState)
   }, [gameState])
 
   return (

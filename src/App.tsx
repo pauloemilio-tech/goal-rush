@@ -7,6 +7,10 @@ import type { Team } from './types/team'
 function App() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
 
+  const handleBackToHome = () => {
+    setSelectedTeam(null)
+  }
+
   const gameState: GameState | null = selectedTeam
     ? {
         status: 'ready',
@@ -19,7 +23,7 @@ function App() {
       {gameState ? (
         <GameScreen
           gameState={gameState}
-          onChangeTeam={() => setSelectedTeam(null)}
+          onBackToHome={handleBackToHome}
         />
       ) : (
         <HomeScreen onSelectTeam={setSelectedTeam} />
