@@ -11,4 +11,7 @@ export interface GameSceneState extends GameState {
   elapsedTime: number
   groundOffset: number
   speed: number
+  playerY: number
+  playerVelocityY: number
+  isGrounded: boolean
 }

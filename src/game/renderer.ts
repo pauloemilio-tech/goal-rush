@@ -69,18 +69,18 @@ function drawPlayer(
   state: GameSceneState,
 ) {
   const runPhase = state.elapsedTime * RUN_CYCLE_SPEED
-  const bodyBob = Math.abs(Math.sin(runPhase)) * 4
-  const legSwing = Math.sin(runPhase) * 18
-  const bodyY = GROUND_Y - bodyBob
+  const bodyBob = state.isGrounded ? Math.abs(Math.sin(runPhase)) * 4 : 0
+  const legSwing = state.isGrounded ? Math.sin(runPhase) * 18 : 0
+  const bodyY = state.playerY - bodyBob
 
   context.strokeStyle = '#10213a'
   context.lineWidth = 12
   context.lineCap = 'round'
   context.beginPath()
   context.moveTo(PLAYER_X - 12, bodyY - 20)
-  context.lineTo(PLAYER_X - 12 + legSwing, GROUND_Y - 2)
+  context.lineTo(PLAYER_X - 12 + legSwing, state.playerY - 2)
   context.moveTo(PLAYER_X + 12, bodyY - 20)
-  context.lineTo(PLAYER_X + 12 - legSwing, GROUND_Y - 2)
+  context.lineTo(PLAYER_X + 12 - legSwing, state.playerY - 2)
   context.stroke()
 
   context.fillStyle = '#d99a68'
@@ -101,8 +101,8 @@ function drawBall(
 ) {
   const runPhase = state.elapsedTime * RUN_CYCLE_SPEED
   const ballX = PLAYER_X + BALL_DISTANCE + Math.sin(runPhase) * 3
-  const ballY =
-    GROUND_Y - BALL_RADIUS - Math.abs(Math.sin(runPhase)) * 4
+  const ballBounce = state.isGrounded ? Math.abs(Math.sin(runPhase)) * 4 : 0
+  const ballY = state.playerY - BALL_RADIUS - ballBounce
 
   context.save()
   context.translate(ballX, ballY)

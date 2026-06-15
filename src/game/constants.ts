@@ -8,6 +8,9 @@ export const MAX_DELTA_TIME = 0.05
 export const GROUND_PATTERN_WIDTH = 96
 
 export const PLAYER_X = 300
+export const PLAYER_GROUND_Y = GROUND_Y
+export const GRAVITY = 1900
+export const JUMP_FORCE = 720
 export const RUN_CYCLE_SPEED = 11
 export const BALL_DISTANCE = 82
 export const BALL_RADIUS = 20
