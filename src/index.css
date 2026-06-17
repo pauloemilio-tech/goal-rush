@@ -271,6 +271,10 @@ button:focus-visible {
   color: #f7fbff;
 }
 
+.play-again-button {
+  margin-left: auto;
+}
+
 .team-dot {
   width: 11px;
   height: 11px;
@@ -313,8 +317,12 @@ button:focus-visible {
     gap: 8px;
   }
 
-  .game-footer > span:last-child {
+  .game-status-text {
     width: 100%;
     margin-left: 19px;
+  }
+
+  .play-again-button {
+    margin-left: 0;
   }
 }

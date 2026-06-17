@@ -5,9 +5,15 @@ import type { GameState } from '../types/game'
 
 interface GameCanvasProps {
   gameState: GameState
+  onGameOverChange: (isGameOver: boolean) => void
+  restartSignal: number
 }
 
-export function GameCanvas({ gameState }: GameCanvasProps) {
+export function GameCanvas({
+  gameState,
+  onGameOverChange,
+  restartSignal,
+}: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -22,8 +28,8 @@ export function GameCanvas({ gameState }: GameCanvasProps) {
     canvas.height = GAME_HEIGHT * pixelRatio
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
 
-    return startGameEngine(context, gameState)
-  }, [gameState])
+    return startGameEngine(context, gameState, { onGameOverChange })
+  }, [gameState, onGameOverChange, restartSignal])
 
   return (
     <canvas

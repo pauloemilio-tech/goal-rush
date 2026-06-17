@@ -9,11 +9,29 @@ export const GROUND_PATTERN_WIDTH = 96
 
 export const PLAYER_X = 300
 export const PLAYER_GROUND_Y = GROUND_Y
+export const PLAYER_HITBOX_WIDTH = 42
+export const PLAYER_HITBOX_HEIGHT = 92
+export const PLAYER_HITBOX_OFFSET_Y = 94
 export const GRAVITY = 1900
 export const JUMP_FORCE = 720
 export const RUN_CYCLE_SPEED = 11
 export const BALL_DISTANCE = 82
 export const BALL_RADIUS = 20
+
+export const OBSTACLE_MIN_SPAWN_TIME = 1.1
+export const OBSTACLE_MAX_SPAWN_TIME = 2.1
+export const OBSTACLE_START_X = GAME_WIDTH + 56
+export const OBSTACLE_REMOVE_PADDING = 80
+export const OBSTACLE_VARIANTS = {
+  cone: {
+    width: 38,
+    height: 62,
+  },
+  barrier: {
+    width: 56,
+    height: 46,
+  },
+} as const
 
 export const SCENE_COLORS = {
   skyTop: '#172b4f',

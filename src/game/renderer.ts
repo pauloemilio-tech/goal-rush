@@ -12,6 +12,33 @@ import {
   SCENE_COLORS,
 } from './constants'
 
+function drawObstacle(
+  context: CanvasRenderingContext2D,
+  obstacle: GameSceneState['obstacles'][number],
+) {
+  if (obstacle.type === 'cone') {
+    context.fillStyle = '#f97316'
+    context.beginPath()
+    context.moveTo(obstacle.x + obstacle.width / 2, obstacle.y)
+    context.lineTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height)
+    context.lineTo(obstacle.x, obstacle.y + obstacle.height)
+    context.closePath()
+    context.fill()
+
+    context.fillStyle = '#ffffff'
+    context.fillRect(obstacle.x + 10, obstacle.y + obstacle.height - 22, 18, 7)
+    return
+  }
+
+  context.fillStyle = '#facc15'
+  context.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
+
+  context.fillStyle = '#7c2d12'
+  context.fillRect(obstacle.x + 8, obstacle.y + 8, 10, obstacle.height - 16)
+  context.fillRect(obstacle.x + obstacle.width - 18, obstacle.y + 8, 10, obstacle.height - 16)
+  context.fillRect(obstacle.x + 8, obstacle.y + 18, obstacle.width - 16, 10)
+}
+
 function drawBackground(context: CanvasRenderingContext2D) {
   const gradient = context.createLinearGradient(0, 0, 0, GAME_HEIGHT)
   gradient.addColorStop(0, SCENE_COLORS.skyTop)
@@ -62,6 +89,13 @@ function drawGround(
     context.closePath()
     context.fill()
   }
+}
+
+function drawObstacles(
+  context: CanvasRenderingContext2D,
+  state: GameSceneState,
+) {
+  state.obstacles.forEach((obstacle) => drawObstacle(context, obstacle))
 }
 
 function drawPlayer(
@@ -143,6 +177,31 @@ function drawTeamName(
   context.fillText(state.selectedTeam.name, 76, 65)
 }
 
+function drawGameOver(
+  context: CanvasRenderingContext2D,
+  state: GameSceneState,
+) {
+  if (!state.isGameOver) return
+
+  context.fillStyle = 'rgba(5, 12, 26, 0.62)'
+  context.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+
+  context.fillStyle = SCENE_COLORS.text
+  context.font = '800 52px Inter, system-ui, sans-serif'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText('GAME OVER', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 22)
+
+  context.font = '600 22px Inter, system-ui, sans-serif'
+  context.fillText(
+    'Pressione Enter ou use Jogar novamente',
+    GAME_WIDTH / 2,
+    GAME_HEIGHT / 2 + 34,
+  )
+
+  context.textAlign = 'start'
+}
+
 export function renderGameScene(
   context: CanvasRenderingContext2D,
   state: GameSceneState,
@@ -150,7 +209,9 @@ export function renderGameScene(
   context.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
   drawBackground(context)
   drawGround(context, state)
+  drawObstacles(context, state)
   drawPlayer(context, state)
   drawBall(context, state)
   drawTeamName(context, state)
+  drawGameOver(context, state)
 }

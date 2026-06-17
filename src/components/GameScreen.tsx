@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react'
 import type { GameState } from '../types/game'
 import { GameCanvas } from './GameCanvas'
 
@@ -10,6 +11,18 @@ export function GameScreen({
   gameState,
   onBackToHome,
 }: GameScreenProps) {
+  const [isGameOver, setIsGameOver] = useState(false)
+  const [restartSignal, setRestartSignal] = useState(0)
+
+  const handleGameOverChange = useCallback((nextIsGameOver: boolean) => {
+    setIsGameOver(nextIsGameOver)
+  }, [])
+
+  const handlePlayAgain = () => {
+    setIsGameOver(false)
+    setRestartSignal((currentSignal) => currentSignal + 1)
+  }
+
   return (
     <main className="screen game-screen">
       <section className="game-shell">
@@ -32,7 +45,11 @@ export function GameScreen({
         </header>
 
         <div className="canvas-frame">
-          <GameCanvas gameState={gameState} />
+          <GameCanvas
+            gameState={gameState}
+            onGameOverChange={handleGameOverChange}
+            restartSignal={restartSignal}
+          />
         </div>
 
         <footer className="game-footer">
@@ -41,7 +58,18 @@ export function GameScreen({
             style={{ backgroundColor: gameState.selectedTeam.colors.primary }}
           />
           <strong>{gameState.selectedTeam.name}</strong>
-          <span>Cena inicial pronta para jogar</span>
+          <span className="game-status-text">
+            {isGameOver ? 'Fim de jogo' : 'Cena inicial pronta para jogar'}
+          </span>
+          {isGameOver && (
+            <button
+              className="secondary-button play-again-button"
+              onClick={handlePlayAgain}
+              type="button"
+            >
+              Jogar novamente
+            </button>
+          )}
         </footer>
       </section>
     </main>
