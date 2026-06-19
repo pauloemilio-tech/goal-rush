@@ -33,6 +33,16 @@ export const OBSTACLE_VARIANTS = {
   },
 } as const
 
+export const GOAL_WIDTH = 118
+export const GOAL_HEIGHT = 92
+export const GOAL_START_X = GAME_WIDTH + 120
+export const GOAL_REMOVE_PADDING = 120
+export const GOAL_SPAWN_MIN_TIME = 3.4
+export const GOAL_SPAWN_MAX_TIME = 5.8
+export const KICK_ACTIVE_TIME = 0.26
+export const GOAL_DETECTION_RANGE = 54
+export const GOAL_FEEDBACK_TIME = 1.05
+
 export const SCENE_COLORS = {
   skyTop: '#172b4f',
   skyBottom: '#35658a',

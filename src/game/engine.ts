@@ -1,8 +1,24 @@
-import type { GameSceneState, GameState, Obstacle, ObstacleType } from '../types/game'
+import type {
+  GameSceneState,
+  GameState,
+  Goal,
+  Obstacle,
+  ObstacleType,
+} from '../types/game'
 import {
+  BALL_DISTANCE,
   BASE_SPEED,
+  GOAL_DETECTION_RANGE,
+  GOAL_FEEDBACK_TIME,
+  GOAL_HEIGHT,
+  GOAL_REMOVE_PADDING,
+  GOAL_SPAWN_MAX_TIME,
+  GOAL_SPAWN_MIN_TIME,
+  GOAL_START_X,
+  GOAL_WIDTH,
   GRAVITY,
   GROUND_PATTERN_WIDTH,
+  KICK_ACTIVE_TIME,
   OBSTACLE_MAX_SPAWN_TIME,
   OBSTACLE_MIN_SPAWN_TIME,
   OBSTACLE_REMOVE_PADDING,
@@ -15,10 +31,12 @@ import {
   PLAYER_HITBOX_WIDTH,
   PLAYER_GROUND_Y,
   PLAYER_X,
+  RUN_CYCLE_SPEED,
 } from './constants'
 import { renderGameScene } from './renderer'
 
 const JUMP_KEYS = new Set(['Space', 'ArrowUp', 'KeyW'])
+const KICK_KEYS = new Set(['KeyX', 'KeyK', 'Enter'])
 const RESTART_KEY = 'Enter'
 
 interface Rect {
@@ -39,6 +57,13 @@ function getRandomSpawnTime() {
   )
 }
 
+function getRandomGoalSpawnTime() {
+  return (
+    GOAL_SPAWN_MIN_TIME +
+    Math.random() * (GOAL_SPAWN_MAX_TIME - GOAL_SPAWN_MIN_TIME)
+  )
+}
+
 function createSceneState(gameState: GameState): GameSceneState {
   return {
     ...gameState,
@@ -49,9 +74,16 @@ function createSceneState(gameState: GameState): GameSceneState {
     playerVelocityY: 0,
     isGrounded: true,
     obstacles: [],
+    goals: [],
+    goalsScored: 0,
+    isKicking: false,
+    kickTimer: 0,
+    goalFeedbackTimer: 0,
     isGameOver: false,
     nextObstacleSpawnIn: getRandomSpawnTime(),
+    nextGoalSpawnIn: getRandomGoalSpawnTime(),
     obstacleIdCounter: 0,
+    goalIdCounter: 0,
   }
 }
 
@@ -71,6 +103,20 @@ function createObstacle(state: GameSceneState): Obstacle {
   }
 }
 
+function createGoal(state: GameSceneState): Goal {
+  state.goalIdCounter += 1
+
+  return {
+    id: state.goalIdCounter,
+    x: GOAL_START_X,
+    y: PLAYER_GROUND_Y - GOAL_HEIGHT,
+    width: GOAL_WIDTH,
+    height: GOAL_HEIGHT,
+    type: 'ground',
+    isScored: false,
+  }
+}
+
 function updateObstacles(state: GameSceneState, deltaTime: number) {
   state.nextObstacleSpawnIn -= deltaTime
 
@@ -87,6 +133,22 @@ function updateObstacles(state: GameSceneState, deltaTime: number) {
     .filter((obstacle) => obstacle.x + obstacle.width > -OBSTACLE_REMOVE_PADDING)
 }
 
+function updateGoals(state: GameSceneState, deltaTime: number) {
+  state.nextGoalSpawnIn -= deltaTime
+
+  if (state.nextGoalSpawnIn <= 0) {
+    state.goals.push(createGoal(state))
+    state.nextGoalSpawnIn = getRandomGoalSpawnTime()
+  }
+
+  state.goals = state.goals
+    .map((goal) => ({
+      ...goal,
+      x: goal.x - state.speed * deltaTime,
+    }))
+    .filter((goal) => goal.x + goal.width > -GOAL_REMOVE_PADDING && !goal.isScored)
+}
+
 function getPlayerHitbox(state: GameSceneState): Rect {
   return {
     x: PLAYER_X - PLAYER_HITBOX_WIDTH / 2,
@@ -94,6 +156,48 @@ function getPlayerHitbox(state: GameSceneState): Rect {
     width: PLAYER_HITBOX_WIDTH,
     height: PLAYER_HITBOX_HEIGHT,
   }
+}
+
+function getBallX(state: GameSceneState) {
+  return PLAYER_X + BALL_DISTANCE + Math.sin(state.elapsedTime * RUN_CYCLE_SPEED) * 3
+}
+
+function kick(state: GameSceneState) {
+  if (state.isGameOver) return
+
+  state.isKicking = true
+  state.kickTimer = KICK_ACTIVE_TIME
+}
+
+function updateKick(state: GameSceneState, deltaTime: number) {
+  if (state.kickTimer <= 0) {
+    state.isKicking = false
+    return
+  }
+
+  state.kickTimer = Math.max(0, state.kickTimer - deltaTime)
+  state.isKicking = state.kickTimer > 0
+}
+
+function checkGoalScoring(state: GameSceneState) {
+  if (!state.isKicking) return
+
+  const ballX = getBallX(state)
+
+  state.goals.forEach((goal) => {
+    if (goal.isScored) return
+
+    const goalMouthX = goal.x + goal.width * 0.2
+    const isBallNearGoal =
+      ballX >= goalMouthX - GOAL_DETECTION_RANGE &&
+      ballX <= goal.x + goal.width + GOAL_DETECTION_RANGE
+
+    if (!isBallNearGoal) return
+
+    goal.isScored = true
+    state.goalsScored += 1
+    state.goalFeedbackTimer = GOAL_FEEDBACK_TIME
+  })
 }
 
 function doRectsOverlap(first: Rect, second: Rect) {
@@ -117,6 +221,8 @@ export function updateGame(state: GameSceneState, deltaTime: number) {
   state.elapsedTime += deltaTime
   state.groundOffset =
     (state.groundOffset + state.speed * deltaTime) % GROUND_PATTERN_WIDTH
+  state.goalFeedbackTimer = Math.max(0, state.goalFeedbackTimer - deltaTime)
+  updateKick(state, deltaTime)
 
   if (!state.isGrounded) {
     state.playerVelocityY += GRAVITY * deltaTime
@@ -130,6 +236,8 @@ export function updateGame(state: GameSceneState, deltaTime: number) {
   }
 
   updateObstacles(state, deltaTime)
+  updateGoals(state, deltaTime)
+  checkGoalScoring(state)
 }
 
 function jump(state: GameSceneState) {
@@ -168,6 +276,12 @@ export function startGameEngine(
     if (sceneState.isGameOver && event.code === RESTART_KEY) {
       event.preventDefault()
       if (!event.repeat) restartGame()
+      return
+    }
+
+    if (KICK_KEYS.has(event.code)) {
+      event.preventDefault()
+      if (!event.repeat) kick(sceneState)
       return
     }
 
