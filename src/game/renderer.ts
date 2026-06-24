@@ -1,15 +1,16 @@
 import type { GameSceneState } from '../types/game'
 import {
-  BALL_DISTANCE,
-  BALL_RADIUS,
+  DESTRUCTION_FEEDBACK_TIME,
   GAME_HEIGHT,
   GAME_WIDTH,
   GROUND_HEIGHT,
   GROUND_PATTERN_WIDTH,
   GROUND_Y,
+  GOAL_POST_WIDTH,
   PLAYER_X,
   RUN_CYCLE_SPEED,
   SCENE_COLORS,
+  SHOW_DEBUG_HUD,
 } from './constants'
 
 function drawObstacle(
@@ -30,6 +31,29 @@ function drawObstacle(
     return
   }
 
+  if (obstacle.type === 'breakableBarrier') {
+    context.fillStyle = '#7c3aed'
+    context.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
+    context.strokeStyle = '#67e8f9'
+    context.lineWidth = 4
+    context.strokeRect(
+      obstacle.x + 2,
+      obstacle.y + 2,
+      obstacle.width - 4,
+      obstacle.height - 4,
+    )
+    context.beginPath()
+    context.moveTo(obstacle.x + 8, obstacle.y + 8)
+    context.lineTo(
+      obstacle.x + obstacle.width - 8,
+      obstacle.y + obstacle.height - 8,
+    )
+    context.moveTo(obstacle.x + obstacle.width - 8, obstacle.y + 8)
+    context.lineTo(obstacle.x + 8, obstacle.y + obstacle.height - 8)
+    context.stroke()
+    return
+  }
+
   context.fillStyle = '#facc15'
   context.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
 
@@ -45,7 +69,7 @@ function drawGoal(
 ) {
   context.save()
   context.strokeStyle = '#f8fafc'
-  context.lineWidth = 7
+  context.lineWidth = GOAL_POST_WIDTH
   context.lineCap = 'square'
 
   context.beginPath()
@@ -173,56 +197,107 @@ function drawPlayer(
   context.fillRect(PLAYER_X - 27, bodyY - 68, 54, 12)
 }
 
-function getBallPosition(
-  state: GameSceneState,
-) {
-  const runPhase = state.elapsedTime * RUN_CYCLE_SPEED
-  const ballBounce = state.isGrounded ? Math.abs(Math.sin(runPhase)) * 4 : 0
-
-  return {
-    x: PLAYER_X + BALL_DISTANCE + Math.sin(runPhase) * 3,
-    y: state.playerY - BALL_RADIUS - ballBounce,
-  }
-}
-
 function drawKickEffect(
   context: CanvasRenderingContext2D,
   state: GameSceneState,
 ) {
-  if (!state.isKicking) return
+  if (state.ball.state !== 'shot') return
 
-  const ball = getBallPosition(state)
+  const ball = state.ball
 
-  context.strokeStyle = 'rgba(250, 204, 21, 0.82)'
+  if (ball.isPowerShot) {
+    const gradient = context.createLinearGradient(
+      ball.x - 100,
+      ball.y,
+      ball.x,
+      ball.y,
+    )
+    gradient.addColorStop(0, 'rgba(103, 232, 249, 0)')
+    gradient.addColorStop(1, 'rgba(103, 232, 249, 0.9)')
+    context.strokeStyle = gradient
+    context.lineWidth = 10
+    context.beginPath()
+    context.moveTo(ball.x - 90, ball.y)
+    context.lineTo(ball.x - ball.radius, ball.y)
+    context.stroke()
+  }
+
+  context.strokeStyle = ball.isPowerShot
+    ? 'rgba(103, 232, 249, 0.95)'
+    : 'rgba(250, 204, 21, 0.82)'
   context.lineWidth = 4
   context.beginPath()
-  context.arc(ball.x + 8, ball.y, BALL_RADIUS + 12, -0.75, 0.75)
+  context.arc(ball.x + 8, ball.y, ball.radius + 8, -0.75, 0.75)
   context.stroke()
 
   context.fillStyle = 'rgba(250, 204, 21, 0.9)'
   context.beginPath()
-  context.moveTo(ball.x + BALL_RADIUS + 16, ball.y)
-  context.lineTo(ball.x + BALL_RADIUS + 34, ball.y - 8)
-  context.lineTo(ball.x + BALL_RADIUS + 34, ball.y + 8)
+  context.moveTo(ball.x - ball.radius - 8, ball.y)
+  context.lineTo(ball.x - ball.radius - 30, ball.y - 7)
+  context.lineTo(ball.x - ball.radius - 30, ball.y + 7)
   context.closePath()
   context.fill()
+}
+
+function drawPowerShotFeedback(
+  context: CanvasRenderingContext2D,
+  state: GameSceneState,
+) {
+  if (state.powerShotGoalId === null && !state.ball.isPowerShot) return
+
+  context.fillStyle = '#67e8f9'
+  context.font = '900 30px Inter, system-ui, sans-serif'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText('POWER SHOT', GAME_WIDTH / 2, 128)
+  context.textAlign = 'start'
+}
+
+function drawDestructionFeedback(
+  context: CanvasRenderingContext2D,
+  state: GameSceneState,
+) {
+  if (state.destructionFeedbackTimer <= 0) return
+
+  const progress =
+    1 - state.destructionFeedbackTimer / DESTRUCTION_FEEDBACK_TIME
+  context.save()
+  context.translate(state.destructionFeedbackX, state.destructionFeedbackY)
+
+  for (let index = 0; index < 6; index += 1) {
+    const angle = (Math.PI * 2 * index) / 6
+    const distance = 12 + progress * 42
+    context.fillStyle = index % 2 === 0 ? '#67e8f9' : '#a78bfa'
+    context.fillRect(
+      Math.cos(angle) * distance - 4,
+      Math.sin(angle) * distance - 4,
+      8,
+      8,
+    )
+  }
+
+  context.fillStyle = '#ffffff'
+  context.font = '900 18px Inter, system-ui, sans-serif'
+  context.textAlign = 'center'
+  context.fillText('BREAK!', 0, -38)
+  context.restore()
 }
 
 function drawBall(
   context: CanvasRenderingContext2D,
   state: GameSceneState,
 ) {
-  const ball = getBallPosition(state)
+  const ball = state.ball
 
   context.save()
   context.translate(ball.x, ball.y)
-  context.rotate(state.elapsedTime * state.speed / BALL_RADIUS)
+  context.rotate(state.elapsedTime * Math.max(state.speed, ball.velocityX) / ball.radius)
 
   context.fillStyle = '#ffffff'
   context.strokeStyle = '#172033'
   context.lineWidth = 4
   context.beginPath()
-  context.arc(0, 0, BALL_RADIUS, 0, Math.PI * 2)
+  context.arc(0, 0, ball.radius, 0, Math.PI * 2)
   context.fill()
   context.stroke()
 
@@ -268,6 +343,25 @@ function drawGoalsCounter(
   context.textBaseline = 'middle'
   context.fillText(`Gols ${state.goalsScored}`, GAME_WIDTH - 54, 65)
   context.textAlign = 'start'
+}
+
+function drawDifficultyDebug(
+  context: CanvasRenderingContext2D,
+  state: GameSceneState,
+) {
+  context.fillStyle = 'rgba(6, 18, 38, 0.62)'
+  context.beginPath()
+  context.roundRect(32, GAME_HEIGHT - 58, 270, 34, 10)
+  context.fill()
+
+  context.fillStyle = 'rgba(255, 255, 255, 0.82)'
+  context.font = '600 15px Inter, system-ui, sans-serif'
+  context.textBaseline = 'middle'
+  context.fillText(
+    `${state.elapsedTime.toFixed(1)}s  •  estágio ${state.difficultyLevel}  •  ${Math.round(state.speed)} px/s`,
+    46,
+    GAME_HEIGHT - 41,
+  )
 }
 
 function drawGoalFeedback(
@@ -326,10 +420,13 @@ export function renderGameScene(
   drawGoals(context, state)
   drawObstacles(context, state)
   drawPlayer(context, state)
+  drawDestructionFeedback(context, state)
   drawKickEffect(context, state)
   drawBall(context, state)
   drawTeamName(context, state)
   drawGoalsCounter(context, state)
+  if (SHOW_DEBUG_HUD) drawDifficultyDebug(context, state)
+  drawPowerShotFeedback(context, state)
   drawGoalFeedback(context, state)
   drawGameOver(context, state)
 }

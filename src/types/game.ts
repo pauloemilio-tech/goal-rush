@@ -1,8 +1,21 @@
 import type { Team } from './team'
 
 export type GameStatus = 'ready'
-export type ObstacleType = 'cone' | 'barrier'
+export type ObstacleType = 'cone' | 'barrier' | 'breakableBarrier'
 export type GoalType = 'ground'
+export type GoalScenario = 'normal' | 'powerShot'
+export type BallState = 'attached' | 'shot' | 'resetting'
+
+export interface Ball {
+  x: number
+  y: number
+  velocityX: number
+  velocityY: number
+  radius: number
+  state: BallState
+  resetTimer: number
+  isPowerShot: boolean
+}
 
 export interface Obstacle {
   id: number
@@ -11,6 +24,8 @@ export interface Obstacle {
   width: number
   height: number
   type: ObstacleType
+  destructible: boolean
+  powerShotGoalId: number | null
 }
 
 export interface Goal {
@@ -21,6 +36,7 @@ export interface Goal {
   height: number
   type: GoalType
   isScored: boolean
+  scenario: GoalScenario
 }
 
 export interface GameState {
@@ -32,18 +48,25 @@ export interface GameSceneState extends GameState {
   elapsedTime: number
   groundOffset: number
   speed: number
+  difficultyLevel: number
   playerY: number
   playerVelocityY: number
   isGrounded: boolean
   obstacles: Obstacle[]
   goals: Goal[]
   goalsScored: number
-  isKicking: boolean
-  kickTimer: number
+  ball: Ball
   goalFeedbackTimer: number
+  powerShotGoalId: number | null
+  destructionFeedbackTimer: number
+  destructionFeedbackX: number
+  destructionFeedbackY: number
   isGameOver: boolean
   nextObstacleSpawnIn: number
   nextGoalSpawnIn: number
   obstacleIdCounter: number
   goalIdCounter: number
+  obstaclesSinceLastGoal: number
+  timeSinceLastGoal: number
+  timeSinceLastObstacle: number
 }
