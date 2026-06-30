@@ -75,12 +75,3 @@ export const DIFFICULTY_STAGE_3_TIME = 45
 export const DIFFICULTY_STAGE_4_TIME = 75
 export const DIFFICULTY_MAX_TIME = 120
 export const SHOW_DEBUG_HUD = false
-
-export const SCENE_COLORS = {
-  skyTop: '#172b4f',
-  skyBottom: '#35658a',
-  ground: '#31a553',
-  groundDark: '#17723a',
-  line: '#ecf8e9',
-  text: '#ffffff',
-} as const
