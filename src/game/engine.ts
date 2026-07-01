@@ -21,12 +21,14 @@ import {
   BALL_TUCK_OFFSET_X,
   BALL_TUCK_OFFSET_Y,
   BALL_TUCK_WARNING_DISTANCE,
+  BLOCKED_FEEDBACK_TIME,
   BASE_SPEED,
   DESTRUCTION_FEEDBACK_TIME,
   GOAL_FEEDBACK_TIME,
   GOAL_HEIGHT,
   GOAL_MIN_DISTANCE_FROM_OBSTACLE,
   GOAL_MIN_DISTANCE_FROM_OTHER_GOAL,
+  GOAL_NET_REACTION_TIME,
   GOAL_POST_WIDTH,
   GOAL_REMOVE_PADDING,
   GOAL_SPAWN_MAX_TIME,
@@ -186,6 +188,9 @@ function createSceneState(gameState: GameState): GameSceneState {
     destructionFeedbackTimer: 0,
     destructionFeedbackX: 0,
     destructionFeedbackY: 0,
+    blockedFeedbackTimer: 0,
+    blockedFeedbackX: 0,
+    blockedFeedbackY: 0,
     isGameOver: false,
     nextObstacleSpawnIn: getRandomSpawnTime(0),
     nextGoalSpawnIn: getRandomGoalSpawnTime(0),
@@ -240,6 +245,8 @@ function createGoal(state: GameSceneState, scenario: GoalScenario): Goal {
     type: 'ground',
     isScored: false,
     scenario,
+    goalVisualState: 'visible',
+    goalReactionTimer: 0,
   }
 }
 
@@ -373,8 +380,17 @@ function updateGoals(state: GameSceneState, deltaTime: number) {
     .map((goal) => ({
       ...goal,
       x: goal.x - state.speed * deltaTime,
+      goalReactionTimer:
+        goal.goalVisualState === 'goalReaction'
+          ? Math.max(0, goal.goalReactionTimer - deltaTime)
+          : goal.goalReactionTimer,
     }))
-    .filter((goal) => goal.x + goal.width > -GOAL_REMOVE_PADDING && !goal.isScored)
+    .filter(
+      (goal) =>
+        goal.x + goal.width > -GOAL_REMOVE_PADDING &&
+        (goal.goalVisualState !== 'goalReaction' ||
+          goal.goalReactionTimer > 0),
+    )
 
   if (
     state.powerShotGoalId !== null &&
@@ -440,7 +456,9 @@ function shootBall(state: GameSceneState) {
 function clearPowerShotScenario(state: GameSceneState) {
   if (state.powerShotGoalId !== null) {
     const scenarioGoalId = state.powerShotGoalId
-    state.goals = state.goals.filter((goal) => goal.id !== scenarioGoalId)
+    state.goals = state.goals.filter(
+      (goal) => goal.id !== scenarioGoalId || goal.isScored,
+    )
     state.obstacles = state.obstacles.filter(
       (obstacle) => obstacle.powerShotGoalId !== scenarioGoalId,
     )
@@ -531,6 +549,8 @@ function checkBallGoalCollision(
   if (!scoredGoal) return false
 
   scoredGoal.isScored = true
+  scoredGoal.goalVisualState = 'goalReaction'
+  scoredGoal.goalReactionTimer = GOAL_NET_REACTION_TIME
   state.goalsScored += 1
   state.goalFeedbackTimer = GOAL_FEEDBACK_TIME
   return true
@@ -572,6 +592,9 @@ function checkShotObstacleCollision(
     return false
   }
 
+  state.blockedFeedbackTimer = BLOCKED_FEEDBACK_TIME
+  state.blockedFeedbackX = state.ball.x
+  state.blockedFeedbackY = state.ball.y
   return true
 }
 
@@ -677,6 +700,13 @@ export function updateGame(state: GameSceneState, deltaTime: number) {
   )
   if (state.destructionFeedbackTimer > 0) {
     state.destructionFeedbackX -= state.speed * deltaTime
+  }
+  state.blockedFeedbackTimer = Math.max(
+    0,
+    state.blockedFeedbackTimer - deltaTime,
+  )
+  if (state.blockedFeedbackTimer > 0) {
+    state.blockedFeedbackX -= state.speed * deltaTime
   }
 
   if (!state.isGrounded) {

@@ -6,7 +6,6 @@ import {
   JUMP_FORCE,
   PLAYER_X,
 } from './constants'
-import { getRecoloredPlayerSprite } from './playerPalettes'
 import { drawPlayer as drawProceduralPlayer } from './playerRenderer'
 import {
   getPlayerSprite,
@@ -15,13 +14,8 @@ import {
   type PlayerAnimationName,
   type PlayerSpriteAnimation,
 } from './playerSprites'
-import { GAME_THEME } from './theme'
 
 export const PLAYER_SPRINT_VISUAL_SPEED_THRESHOLD = 310
-
-const KICK_BODY_FPS_MULTIPLIER = 1.15
-const KICK_BODY_ROTATION = 0.02
-const KICK_BODY_OFFSET_X = 1
 
 interface SelectedAnimation {
   name: PlayerAnimationName
@@ -35,9 +29,7 @@ function getKickAnimationTime(state: GameSceneState) {
 }
 
 function getPlayerSpriteSet(teamSlug: TeamSlug): PlayerSpriteSet {
-  return teamSlug === 'brasil'
-    ? PLAYER_SPRITE_SETS.brasil
-    : PLAYER_SPRITE_SETS.legacy
+  return PLAYER_SPRITE_SETS[teamSlug]
 }
 
 function getKickDuration(spriteSet: PlayerSpriteSet) {
@@ -61,7 +53,6 @@ function selectAnimation(
 ): SelectedAnimation {
   if (
     !state.isGameOver &&
-    !spriteSet.usePaletteSwap &&
     isKickAnimationActive(state, spriteSet)
   ) {
     return {
@@ -130,20 +121,11 @@ function getFrameIndex(
 }
 
 function getAnimationSource(
-  state: GameSceneState,
-  spriteSet: PlayerSpriteSet,
-  name: PlayerAnimationName,
   config: PlayerSpriteAnimation,
 ) {
   const image = getPlayerSprite(config)
   if (!image) return null
-  if (!spriteSet.usePaletteSwap) return image
-  return getRecoloredPlayerSprite(
-    image,
-    state.selectedTeam.slug,
-    name,
-    config.frameWidth,
-  )
+  return image
 }
 
 function getDrawMetrics(
@@ -191,81 +173,14 @@ function drawAnimationFrame(
   )
 }
 
-function drawKickEffects(
-  context: CanvasRenderingContext2D,
-  state: GameSceneState,
-  progress: number,
-) {
-  const trailColor = state.ball.isPowerShot
-    ? GAME_THEME.powerShot
-    : GAME_THEME.kickStrong
-  context.save()
-  context.globalAlpha = 1 - progress * 0.62
-  context.strokeStyle = trailColor
-  context.lineWidth = 3
-  context.lineCap = 'butt'
-  context.beginPath()
-  context.moveTo(state.ball.x - 30, state.ball.y)
-  context.lineTo(state.ball.x - state.ball.radius - 4, state.ball.y)
-  context.stroke()
-  context.fillStyle = GAME_THEME.kickStrong
-  context.fillRect(PLAYER_X + 32, state.playerY - 17, 7, 4)
-  context.fillRect(PLAYER_X + 40, state.playerY - 20, 3, 3)
-  context.restore()
-}
-
-function drawKickComposite(
-  context: CanvasRenderingContext2D,
-  state: GameSceneState,
-  spriteSet: PlayerSpriteSet,
-) {
-  const bodyName: PlayerAnimationName =
-    state.speed >= PLAYER_SPRINT_VISUAL_SPEED_THRESHOLD
-      ? 'sprint'
-      : 'running'
-  const bodyConfig = spriteSet.animations[bodyName]
-  const bodySource = getAnimationSource(state, spriteSet, bodyName, bodyConfig)
-  if (!bodySource) return false
-
-  const kickTime = getKickAnimationTime(state)
-  const kickProgress = Math.min(1, kickTime / getKickDuration(spriteSet))
-  const bodyFrame = Math.floor(
-    kickTime * bodyConfig.fps * KICK_BODY_FPS_MULTIPLIER,
-  ) % bodyConfig.frameCount
-  const metrics = getDrawMetrics(state, spriteSet, bodyConfig)
-
-  context.save()
-  context.imageSmoothingEnabled = false
-  context.translate(PLAYER_X, state.playerY)
-  context.rotate(KICK_BODY_ROTATION)
-  context.translate(-PLAYER_X, -state.playerY)
-  metrics.x += KICK_BODY_OFFSET_X
-  drawAnimationFrame(context, bodySource, bodyConfig, bodyFrame, metrics)
-
-  context.restore()
-  drawKickEffects(context, state, kickProgress)
-  return true
-}
-
 function drawPlayerSprite(
   context: CanvasRenderingContext2D,
   state: GameSceneState,
 ) {
   const spriteSet = getPlayerSpriteSet(state.selectedTeam.slug)
 
-  if (
-    !state.isGameOver &&
-    spriteSet.usePaletteSwap &&
-    isKickAnimationActive(state, spriteSet)
-  ) {
-    return drawKickComposite(context, state, spriteSet)
-  }
-
   const animation = selectAnimation(state, spriteSet)
   const source = getAnimationSource(
-    state,
-    spriteSet,
-    animation.name,
     animation.config,
   )
   if (!source) return false

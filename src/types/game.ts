@@ -4,6 +4,7 @@ export type GameStatus = 'ready'
 export type ObstacleType = 'cone' | 'barrier' | 'breakableBarrier'
 export type GoalType = 'ground'
 export type GoalScenario = 'normal' | 'powerShot'
+export type GoalVisualState = 'visible' | 'goalReaction'
 export type BallState = 'attached' | 'shot' | 'resetting'
 
 export interface Ball {
@@ -37,6 +38,8 @@ export interface Goal {
   type: GoalType
   isScored: boolean
   scenario: GoalScenario
+  goalVisualState: GoalVisualState
+  goalReactionTimer: number
 }
 
 export interface GameState {
@@ -61,6 +64,9 @@ export interface GameSceneState extends GameState {
   destructionFeedbackTimer: number
   destructionFeedbackX: number
   destructionFeedbackY: number
+  blockedFeedbackTimer: number
+  blockedFeedbackX: number
+  blockedFeedbackY: number
   isGameOver: boolean
   nextObstacleSpawnIn: number
   nextGoalSpawnIn: number

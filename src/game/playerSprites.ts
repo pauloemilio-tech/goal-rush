@@ -1,3 +1,5 @@
+import type { TeamSlug } from '../types/team'
+
 export type PlayerAnimationName =
   | 'running'
   | 'sprint'
@@ -26,142 +28,94 @@ export interface PlayerSpriteSet {
   usePaletteSwap: boolean
 }
 
-const PLAYER_SPRITE_LEGACY_PATH = '/assets/sprites/player/legacy'
-const PLAYER_SPRITE_BRAZIL_PATH = '/assets/sprites/player/brazil'
-
-const LEGACY_PLAYER_SPRITE_ANIMATIONS: Record<
-  PlayerAnimationName,
-  PlayerSpriteAnimation
-> = {
-  running: {
-    src: `${PLAYER_SPRITE_LEGACY_PATH}/running.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 6,
-    fps: 12,
-    loop: true,
-  },
-  sprint: {
-    src: `${PLAYER_SPRITE_LEGACY_PATH}/running.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 6,
-    fps: 14,
-    loop: true,
-  },
-  idle: {
-    src: `${PLAYER_SPRITE_LEGACY_PATH}/idle.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 4,
-    fps: 6,
-    loop: true,
-  },
-  jump: {
-    src: `${PLAYER_SPRITE_LEGACY_PATH}/runningJump.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 8,
-    fps: 12,
-    loop: false,
-  },
-  kick: {
-    src: `${PLAYER_SPRITE_LEGACY_PATH}/kick.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 4,
-    fps: 14,
-    loop: false,
-  },
-  slide: {
-    src: `${PLAYER_SPRITE_LEGACY_PATH}/runningJump.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 8,
-    fps: 12,
-    loop: false,
-    frames: [4, 5, 6, 7],
-  },
+function createPlayerSpriteAnimations(
+  path: string,
+): Record<PlayerAnimationName, PlayerSpriteAnimation> {
+  return {
+    running: {
+      src: `${path}/running.png`,
+      frameWidth: 120,
+      frameHeight: 120,
+      frameCount: 6,
+      fps: 11,
+      loop: true,
+    },
+    sprint: {
+      src: `${path}/running.png`,
+      frameWidth: 120,
+      frameHeight: 120,
+      frameCount: 6,
+      fps: 12,
+      loop: true,
+    },
+    idle: {
+      src: `${path}/idle.png`,
+      frameWidth: 120,
+      frameHeight: 120,
+      frameCount: 4,
+      fps: 6,
+      loop: true,
+    },
+    jump: {
+      src: `${path}/runningJump.png`,
+      frameWidth: 120,
+      frameHeight: 120,
+      frameCount: 8,
+      fps: 12,
+      loop: false,
+    },
+    kick: {
+      src: `${path}/kick.png`,
+      frameWidth: 120,
+      frameHeight: 120,
+      frameCount: 4,
+      fps: 14,
+      loop: false,
+    },
+    slide: {
+      src: `${path}/runningJump.png`,
+      frameWidth: 120,
+      frameHeight: 120,
+      frameCount: 8,
+      fps: 12,
+      loop: false,
+      frames: [4, 5, 6, 7],
+    },
+  }
 }
 
-const BRAZIL_PLAYER_SPRITE_ANIMATIONS: Record<
-  PlayerAnimationName,
-  PlayerSpriteAnimation
-> = {
-  running: {
-    src: `${PLAYER_SPRITE_BRAZIL_PATH}/running.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 6,
-    fps: 11,
-    loop: true,
-  },
-  sprint: {
-    src: `${PLAYER_SPRITE_BRAZIL_PATH}/running.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 6,
-    fps: 12,
-    loop: true,
-  },
-  idle: {
-    src: `${PLAYER_SPRITE_BRAZIL_PATH}/idle.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 4,
-    fps: 6,
-    loop: true,
-  },
-  jump: {
-    src: `${PLAYER_SPRITE_BRAZIL_PATH}/runningJump.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 8,
-    fps: 12,
-    loop: false,
-  },
-  kick: {
-    src: `${PLAYER_SPRITE_BRAZIL_PATH}/kick.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 4,
-    fps: 14,
-    loop: false,
-  },
-  slide: {
-    src: `${PLAYER_SPRITE_BRAZIL_PATH}/runningJump.png`,
-    frameWidth: 120,
-    frameHeight: 120,
-    frameCount: 8,
-    fps: 12,
-    loop: false,
-    frames: [4, 5, 6, 7],
-  },
+const PLAYER_SPRITE_PATHS: Record<TeamSlug, string> = {
+  brasil: '/assets/sprites/player/brazil',
+  argentina: '/assets/sprites/player/argentina',
+  chile: '/assets/sprites/player/chile',
+}
+
+const PLAYER_SPRITE_SET_BASE = {
+  scale: 2,
+  footAnchorX: 60,
+  footAnchorY: 90,
+  offsetX: 0,
+  offsetY: 0,
+  usePaletteSwap: false,
 }
 
 export const PLAYER_SPRITE_SETS = {
-  legacy: {
-    animations: LEGACY_PLAYER_SPRITE_ANIMATIONS,
-    scale: 2,
-    footAnchorX: 60,
-    footAnchorY: 90,
-    offsetX: 0,
-    offsetY: 0,
-    usePaletteSwap: true,
-  },
   brasil: {
-    animations: BRAZIL_PLAYER_SPRITE_ANIMATIONS,
-    scale: 2,
-    footAnchorX: 60,
-    footAnchorY: 90,
-    offsetX: 0,
-    offsetY: 0,
-    usePaletteSwap: false,
+    ...PLAYER_SPRITE_SET_BASE,
+    animations: createPlayerSpriteAnimations(PLAYER_SPRITE_PATHS.brasil),
   },
-} satisfies Record<string, PlayerSpriteSet>
+  argentina: {
+    ...PLAYER_SPRITE_SET_BASE,
+    animations: createPlayerSpriteAnimations(PLAYER_SPRITE_PATHS.argentina),
+  },
+  chile: {
+    ...PLAYER_SPRITE_SET_BASE,
+    animations: createPlayerSpriteAnimations(PLAYER_SPRITE_PATHS.chile),
+  },
+} satisfies Record<TeamSlug, PlayerSpriteSet>
 
 export const PLAYER_SPRITE_ANIMATIONS =
-  PLAYER_SPRITE_SETS.legacy.animations
+  PLAYER_SPRITE_SETS.brasil.animations
 
 type SpriteLoadStatus = 'loading' | 'loaded' | 'error'
 

@@ -1,0 +1,26 @@
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/game/constants.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/game/engine.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/game/playerSpriteRenderer.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/game/playerSprites.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/game/renderer.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/game/theme.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/types/game.ts', LF will be replaced by CRLF the next time Git touches it
+ package.json                                       |   1 [32m+[m
+ public/assets/sprites/player/base/idle.png         | Bin [31m13430[m -> [32m12497[m bytes
+ public/assets/sprites/player/base/kick.png         | Bin [31m12444[m -> [32m14469[m bytes
+ public/assets/sprites/player/base/running.png      | Bin [31m17903[m -> [32m16376[m bytes
+ public/assets/sprites/player/base/runningJump.png  | Bin [31m24039[m -> [32m22726[m bytes
+ public/assets/sprites/player/brazil/idle.png       | Bin [31m13430[m -> [32m12497[m bytes
+ public/assets/sprites/player/brazil/kick.png       | Bin [31m12444[m -> [32m14469[m bytes
+ public/assets/sprites/player/brazil/running.png    | Bin [31m17903[m -> [32m16376[m bytes
+ .../assets/sprites/player/brazil/runningJump.png   | Bin [31m24039[m -> [32m22726[m bytes
+ src/game/constants.ts                              |   6 [32m+[m[31m-[m
+ src/game/engine.ts                                 |  34 [32m++[m[31m-[m
+ src/game/playerPalettes.ts                         | 310 [31m---------------------[m
+ src/game/playerSpriteRenderer.ts                   |  89 [32m+[m[31m-----[m
+ src/game/playerSprites.ts                          | 206 [32m++++++[m[31m--------[m
+ src/game/renderer.ts                               | 250 [32m+[m[31m----------------[m
+ src/game/theme.ts                                  |  32 [32m++[m[31m-[m
+ src/types/game.ts                                  |   6 [32m+[m
+ 17 files changed, 162 insertions(+), 772 deletions(-)
